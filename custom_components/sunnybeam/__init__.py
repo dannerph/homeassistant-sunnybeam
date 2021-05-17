@@ -50,7 +50,7 @@ class SMASunnyBeam():
         """Initialize SMASunnyBeam."""
 
         self._hass = hass
-        self._data = {}
+        self._data = 0
         self._s_beam = SunnyBeam()
 
         self._update_listeners = []
