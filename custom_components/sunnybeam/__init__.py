@@ -1,6 +1,7 @@
 """Support for SMASunnyBeam."""
 from sunnybeamtool.sunnybeamtool import SunnyBeam
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -32,7 +33,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = sunnybeam
 
     # initial update
-    await sunnybeam.update()
+    hass.loop.create_task(sunnybeam.connect())
 
     # Load sensors
     hass.async_create_task(
@@ -58,7 +59,13 @@ class SMASunnyBeam():
     def get_data(self):
         """Get SMASunnyBeam."""
 
-        return self._data.get()
+        return self._data
+
+    async def connect(self):
+        """Connect SMASunnyBeam and start regular update."""
+
+        await self._s_beam.connect()
+        await self.update()
 
     async def update(self, *args):
         """Fetch new data from SMASunnyBeam."""
@@ -68,6 +75,11 @@ class SMASunnyBeam():
             _LOGGER.warning("New data could not be fetched, try again next time.")
 
         self._notify_listeners()
+        
+        await asyncio.sleep(self._scan_interval)
+        
+        self._hass.loop.create_task(self.update())
+
 
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
