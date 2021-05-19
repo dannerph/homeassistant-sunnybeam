@@ -23,4 +23,4 @@ sunnybeam:
 
 Configuration variables:
 
-* **scan_interval** (optional): How often new data values should be fetched. In seconds, default 10 seconds. You might want to adjust the update interval also in our Sunny Beam (7 - 120s)
+* **scan_interval** (optional): How often new data values should be fetched in seconds, default 10 seconds. You might also want to adjust the update interval in your SMA Sunny Beam (7 - 120s)
