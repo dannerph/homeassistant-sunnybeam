@@ -1,9 +1,25 @@
 """Support for SMASunnyBeam."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
+
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    POWER_KILO_WATT,
+)
+
+from . import DOMAIN, SMASunnyBeam
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,76 +31,55 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     sensors = []
     sunnybeam = hass.data[DOMAIN]
-    sensors.append(SMASunnyBeamSensor("power", sunnybeam))
-    sensors.append(SMASunnyBeamSensor("energy_today", sunnybeam))
-    sensors.append(SMASunnyBeamSensor("energy_total", sunnybeam))
+    sensors.append(SMASunnyBeamSensor(sunnybeam, SensorEntityDescription(
+                key="sunnybeam_power",
+                name="power",
+                native_unit_of_measurement=POWER_KILO_WATT,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
+            )))
+    sensors.append(SMASunnyBeamSensor(sunnybeam, SensorEntityDescription(
+                key="sunnybeam_energy_today",
+                name="energy_today",
+                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                device_class=DEVICE_CLASS_ENERGY,
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+            )))
+    sensors.append(SMASunnyBeamSensor(sunnybeam, SensorEntityDescription(
+                key="sunnybeam_energy_total",
+                name="energy_total",
+                native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                device_class=DEVICE_CLASS_ENERGY,
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+            )))
 
     async_add_entities(sensors)
 
 
-class SMASunnyBeamSensor(Entity):
-    """The entity class for energy_today charging stations sensors."""
+class SMASunnyBeamSensor(SensorEntity):
+    """The entity class for SMA Sunny Beam sensors."""
 
-    def __init__(self, name, sunnybeam):
+    _attr_should_poll = False
+
+    def __init__(self, sunnybeam: SMASunnyBeam, description: SensorEntityDescription):
         """Initialize the SMASunnyBeam Sensor."""
-        self._name = name
         self._sunnybeam = sunnybeam
-        self._state = None
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the binary sensor."""
-        return f"sunnybeam_{self._name}"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"sunnybeam_{self._name.capitalize()}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        
-        if "energy" in self._name:
-            return "mdi:gauge"
-        else:
-            return "mdi:flash"
-
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Get the unit of measurement."""
-
-        if "energy" in self._name:
-            return "kWh"
-        else:
-            return "kW"
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
+        self.entity_description = description
+        self._attr_name = f"{description.key}"
+        self._attr_unique_id = f"{description.key}"
 
     async def async_update(self):
         """Get latest cached states from the device."""
         
         data = self._sunnybeam.get_data()
-        _LOGGER.debug(data)
+        _LOGGER.debug(f"received: {data}")
         if data != 0:
-            if "power" in self._name:
-                self._state = round(int(data[0]) / 1000.0, 3)
-            elif "today" in self._name:
-                self._state = round(float(data[1]), 2)
+            if "power" in self._attr_name:
+                self._attr_native_value = round(int(data[0]) / 1000.0, 3)
+            elif "today" in self._attr_name:
+                self._attr_native_value = round(float(data[1]), 2)
             else:
-                self._state = round(float(data[2]), 2)
+                self._attr_native_value = round(float(data[2]), 0)
 
     def update_callback(self):
         """Schedule a state update."""
