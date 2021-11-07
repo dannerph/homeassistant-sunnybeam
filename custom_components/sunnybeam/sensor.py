@@ -79,7 +79,7 @@ class SMASunnyBeamSensor(SensorEntity):
             elif "today" in self._attr_name:
                 self._attr_native_value = round(float(data[1]), 2)
             else:
-                self._attr_native_value = int(data[2])
+                self._attr_native_value = round(float(data[2]), 2)
 
     def update_callback(self):
         """Schedule a state update."""
