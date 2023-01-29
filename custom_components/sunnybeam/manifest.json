@@ -1,9 +1,9 @@
 {
   "domain": "sunnybeam",
   "name": "SMA Sunny Beam",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "documentation": "https://github.com/dannerph/homeassistant-sunnybeam",
-  "requirements": ["sunnybeamtool>=0.1.0"],
+  "requirements": ["sunnybeamtool>=0.1.1"],
   "dependencies": [],
   "codeowners": [
     "@dannerph"
