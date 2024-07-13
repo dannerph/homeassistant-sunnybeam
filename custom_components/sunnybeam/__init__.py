@@ -1,98 +1,75 @@
-"""Support for SMASunnyBeam."""
-from sunnybeamtool.sunnybeamtool import SunnyBeam
+"""The SMA Sunny Beam integration."""
+
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
-import asyncio
 
-import voluptuous as vol
+from sunnybeamtool.sunnybeamtool import SunnyBeam
 
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntry, ConfigEntryError
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN, ENTRY_COORDINATOR, ENTRY_SERIAL_NUMBER
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "sunnybeam"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_SCAN_INTERVAL, default=10): cv.positive_int, # seconds
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up SMA Sunny Beam from a config entry."""
 
-async def async_setup(hass, config):
-    """Set up parameters."""
-    
-    scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
+    s_beam = SunnyBeam()
+    try:
+        serial_number = await s_beam.get_serial_number()
+    except ConnectionError as err:
+        raise ConfigEntryError("Could not connect to Sunny Beam") from err
 
-    sunnybeam = SMASunnyBeam(hass, scan_interval)
-    hass.data[DOMAIN] = sunnybeam
+    async def async_update_data():
+        """Fetch data from API endpoint."""
+        try:
+            data = await s_beam.get_measurements()
+        except ConnectionError as error:
+            raise UpdateFailed("Could not fetch data from Sunny Beam") from error
+        _LOGGER.debug("Data fetched from Sunny Beam: %s", data)
+        return data
 
-    # initial update
-    hass.loop.create_task(sunnybeam.connect())
-
-    # Load sensors
-    hass.async_create_task(
-        discovery.async_load_platform(hass, "sensor", DOMAIN, {}, config)
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=ENTRY_COORDINATOR,
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=entry.options.get(CONF_SCAN_INTERVAL, 10)),
     )
 
+    await coordinator.async_refresh()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        ENTRY_COORDINATOR: coordinator,
+        ENTRY_SERIAL_NUMBER: serial_number,
+    }
+
+    async def update_listener(hass: HomeAssistant, entry):
+        """Handle options update."""
+
+        coordinator.update_interval = timedelta(
+            seconds=entry.options.get(CONF_SCAN_INTERVAL, 10)
+        )
+        _LOGGER.debug(
+            "Update interval changed to %d seconds",
+            coordinator.update_interval.total_seconds(),
+        )
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-class SMASunnyBeam():
-    """Representation of a SMASunnyBeam."""
-
-    def __init__(self, hass, scan_interval):
-        """Initialize SMASunnyBeam."""
-
-        self._hass = hass
-        self._data = 0
-        self._s_beam = SunnyBeam()
-
-        self._update_listeners = []
-        self._scan_interval = scan_interval
-
-    def get_data(self):
-        """Get SMASunnyBeam."""
-
-        return self._data
-
-    async def connect(self):
-        """Connect SMASunnyBeam and start regular update."""
-
-        await self._s_beam.connect()
-        await self.update()
-
-    async def update(self, *args):
-        """Fetch new data from SMASunnyBeam."""
-
-        self._data = await self._s_beam.get_measurements()
-        if self._data == 0:
-            _LOGGER.warning("New data could not be fetched, try again next time.")
-
-        self._notify_listeners()
-        
-        await asyncio.sleep(self._scan_interval)
-        
-        self._hass.loop.create_task(self.update())
-
-
-    def add_update_listener(self, listener):
-        """Add a listener for update notifications."""
-
-        self._update_listeners.append(listener)
-        _LOGGER.debug(f"registered sensor: {listener.entity_id}")
-        
-        # initial data is already loaded, thus update the component
-        listener.update_callback()
-
-    def _notify_listeners(self):
-
-        # Inform entities about updated values
-        for listener in self._update_listeners:
-            listener.update_callback()
-        _LOGGER.debug("Notifying all listeners")
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

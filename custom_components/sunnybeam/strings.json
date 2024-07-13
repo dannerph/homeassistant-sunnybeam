@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Sunny Beam is already configured",
+      "single_instance_allowed": "Only one instance of the Sunny Beam is supported",
+      "unknown": "Unknown error occurred",
+      "not_implemented": "Not implemented"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SMA Sunny Beam Options",
+        "description": "The Sunny Beam device fetches the measurements from the inverters in a regular interval, which is configured in the settings of the Sunny Beam device itself. Home Assistant further fetches the measurements from the Sunny Beam device in a regular interval.",
+        "data": {
+          "update_interval": "Update interval in seconds (default = 10s)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": { "name": "Power" },
+      "energy_today": { "name": "Energy today" },
+      "energy_total": { "name": "Energy total" }
+    }
+  }
+}

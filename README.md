@@ -16,11 +16,4 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="1587", ATTRS{idProduct}=="002d", MODE="666"
 
 ## Configuration
 
-```yaml
-sunnybeam:
-  scan_interval: 10
-```
-
-Configuration variables:
-
-* **scan_interval** (optional): How often new data values should be fetched in seconds, default 10 seconds. You might also want to adjust the update interval in your SMA Sunny Beam (7 - 120s)
+Add Integration using Web UI
