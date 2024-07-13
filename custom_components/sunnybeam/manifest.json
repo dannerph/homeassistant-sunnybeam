@@ -3,7 +3,7 @@
   "name": "SMA Sunny Beam",
   "codeowners": ["@dannerph"],
   "config_flow": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/dannerph/homeassistant-sunnybeam",
   "integration_type": "device",
   "iot_class": "local_polling",

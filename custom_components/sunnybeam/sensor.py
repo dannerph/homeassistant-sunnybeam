@@ -95,6 +95,8 @@ class SMASunnyBeamSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = description.key
 
+        self._attr_native_value = self.coordinator.data[self.entity_description.key]
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
