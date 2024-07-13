@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-
-from sunnybeamtool.sunnybeamtool import SunnyBeam
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryError
 from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from sunnybeamtool.sunnybeamtool import SunnyBeam
 
 from .const import DOMAIN, ENTRY_COORDINATOR, ENTRY_SERIAL_NUMBER
 

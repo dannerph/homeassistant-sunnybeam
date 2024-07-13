@@ -5,13 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sunnybeamtool.sunnybeamtool import SunnyBeam
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
+from sunnybeamtool.sunnybeamtool import SunnyBeam
 
 from .const import DOMAIN
 
