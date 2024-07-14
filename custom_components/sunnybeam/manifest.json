@@ -3,12 +3,12 @@
   "name": "SMA Sunny Beam",
   "codeowners": ["@dannerph"],
   "config_flow": true,
-  "version": "1.0.1",
+  "version": "1.0.3",
   "documentation": "https://github.com/dannerph/homeassistant-sunnybeam",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["sunnybeamtool"],
-  "requirements": ["sunnybeamtool==1.0.2"],
+  "requirements": ["sunnybeamtool==1.0.3"],
   "single_config_entry": true,
   "usb": [
     {
