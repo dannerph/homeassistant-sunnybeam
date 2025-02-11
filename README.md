@@ -17,3 +17,9 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="1587", ATTRS{idProduct}=="002d", MODE="666"
 ## Configuration
 
 Add Integration using Web UI
+
+## Support Development
+
+### Paypal
+
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=848P2G8EA68PJ)
